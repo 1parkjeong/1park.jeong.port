@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+    <style type="text/css">
+        canvas {
+            border: 2px solid black;
+        }
+    </style>
+</head>
+
+<body>
+    <div style="text-align: center;"><canvas id="stage" width="400" height="520"></canvas>
+        <div style="display:inline-block; text-align: left; margin-left: 20px;">
+
+            <button onclick="start();" style="border-radius:4px; background-color: darkkhaki;"> 게임 시작 ! </button>
+            <br><br>
+            <h2 id="scorediv"> 현재 점수는 : 0 점</h2>
+            <br><br><br><br><br><br><br><br><br><br>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-right: 14%">
+        <button onclick="moveDown();" style="border-radius:4px;"> Down ! </button>
+        <button onclick="moveLeft();" style="border-radius:4px;"> Left ! </button>
+        <button onclick="moveRight();" style="border-radius:4px;"> Right ! </button>
+        <button onclick="spin();" style="border-radius:4px;"> spin ! </button>
+    </div>
+
+    <script type="text/javascript">
+
+        $(document).keydown(function (event) {
+            if (event.keyCode == '37') {
+                moveLeft();
+            } else if (event.keyCode == '39') {
+                moveRight();
+            } else if (event.keyCode == '38') {
+                spin();
+            } else if (event.keyCode == '32') {
+                moveDown();
+            }
+        });
+
+
+        var score = 0;
+        var canvas = document.getElementById('stage');
+        var ctx = canvas.getContext('2d');
+
+        var block_box = new Array();
+        var block_box_Color = new Array();
+
+        for (var i = 0; i < 20; ++i) {
+            block_box[i] = new Array();
+            block_box_Color[i] = new Array();
+
+
+            for (var j = 0; j < 26; ++j) {
+                if (j == 4 || j == 25) {
+                    block_box_Color[i][j] = 'black';
+                } else if (i == 0 && j > 4) {
+                    block_box_Color[i][j] = 'black';
+                } else if (i == 19 && j > 4) {
+                    block_box_Color[i][j] = 'black';
+                } else {
+                    block_box_Color[i][j] = 'white';
+                }
+            }
+        }
+
+
+        var block1 = [[0,0,0,1,0,2,0,3],
+                      [0,0,1,0,2,0,3,0]]; // ㅁㅁㅁㅁ
+
+        var block2 = [[0,0,1,0,2,0,1,1],
+                      [1,0,0,1,1,1,1,2],
+                      [1,0,0,1,1,1,2,1],  //    ㅁ
+                      [1,0,1,1,2,1,1,2]]; //  ㅁㅁㅁ
+
+        var block3 = [[0,0,1,0,0,1,1,1]]; // ㅁ
+
+        var block4 = [[0,0,1,0,1,1,2,1],  // ㅁㅁ
+                      [0,1,1,0,1,1,0,2]]; //   ㅁㅁ
+        
+        var block5 = [[1,0,2,0,0,1,1,1],  //  ㅁㅁ
+                      [0,0,0,1,1,1,1,2]]; //ㅁㅁ
+
+        var block6 = [[0,0,0,1,0,2,1,2],
+        [0,0,1,0,2,0,0,1],    // ㅁ
+        [0,0,1,0,1,1,1,2],    // ㅁ
+        [2,0,0,1,1,1,2,1]];   // ㅁㅁ
+
+        var block7 = [[1,0,1,1,0,2,1,2],  
+                     [0,0,0,1,1,1,2,1],   //  ㅁ
+                     [0,0,1,0,0,1,0,2],   //  ㅁ
+                     [0,0,1,0,2,0,2,1]];  //ㅁㅁ
+
+        var blockbox = [block1,block2,block3,block4,block5,block6,block7];
+
+       
+       
+     function stage_fill() {
+            for (var i = 0; i < 20; ++i) {
+
+                for (var j = 0; j <26; ++j) {
+                    ctx.fillStyle = block_box_Color[i][j];
+                    ctx.fillRect(i * 20, j * 20, 100, 100);
+                }
+            }
+            
+        }
+
+    function stage_check(){
+        console.log("stage_check 함수 실행");
+        var check = 0;
+        var line = [];
+
+        // 한줄 라인이 모두 블럭이 차있을 때 그 라인 y 좌표를 저장.
+        for (var j = 5; j <26; ++j) {
+            for (var i = 1; i < 20; ++i) {
+                
+               if(block_box_Color[i][j] != 'white' ){
+                    check++;
+               }
+        }
+            if(check == 19){
+                line.push(j);
+            }
+            check = 0;
+        }
+        console.log("line : " + line);
+
+        for(var num = 0; num< line.length; ++num){
+            var ok = false;
+            for(var i =1; i < 20; ++i){
+                for(var j =24; j > 5; --j){
+                    if(j == line[num]){
+                      ok =true;                  
+                    }
+                    if(ok){
+                        block_box_Color[i][j] = block_box_Color[i][j-1];
+                    }
+            }
+        }
+        addscore();
+        }
+        stage_fill();
+    }
+
+        function addscore(){
+            score = score + 20;
+            $('#scorediv').html('현재 점수는 : '+score + '점'); 
+        }
+
+        var x = 8;
+        var y = 5;
+        var down;
+        var random;
+        var spinrandom;
+        var frandom;
+        var usingblock = [];
+        var usingcolor;
+        var finishvalue =0;
+
+        function finish(){
+           
+            clearInterval(down);
+            alert("종료되었습니다.");
+            location.reload();
+        }
+
+        function start(){
+            
+            if( usingcolor != null){
+                return;
+            }
+
+            createblock();
+            spinrandom = random;
+            next();
+            
+           down = setInterval(moveDown,350);
+        }
+
+
+        function keepstart(){
+            
+            stage_check();
+            next();
+            down = setInterval(moveDown,350);
+        }
+
+        function moveDown(){
+            finishvalue++;            
+             var xpos;
+             var ypos;
+
+           
+
+           // 아래줄 체크하기위해 만든 배열.
+            var x1 = 0; var x2 = 0; var x3 = 0; var x4= 0;
+            var y1 = 0; var y2 = 0; var y3 = 0; var y4= 0;
+
+            for(var i = 0; i < 8; i++){
+            if( i%2 == 0){
+
+                
+            // 동일한 x값이 가진 y값중 가장 큰것 저장
+            if( usingblock[0] == usingblock[i]){
+                x1 = usingblock[i];
+                y1 = usingblock[i+1]; 
+            }else if( usingblock[2] == usingblock[i] ) {
+                x2 = usingblock[i];
+                y2 = usingblock[i+1];
+            }else if( usingblock[4] == usingblock[i]) {
+                x3 = usingblock[i];
+                y3 = usingblock[i+1];
+            }else if( usingblock[6] == usingblock[i]) {
+                x4 = usingblock[i];
+                y4 = usingblock[i+1];
+            }
+        }
+    }
+            var checkblock  = [x1,y1,x2,y2,x3,y3,x4,y4];
+            var checkblock2 = [];
+
+            for(var i = 0; i < 8; i++){
+                if(checkblock[i] != 0){
+                  checkblock2.push(checkblock[i]);
+             }
+            }
+
+                //아랫줄 체크해서 함수 실행.
+             for(var i =0; i<checkblock2.length; ++i ){
+                if( i%2 == 0){
+                    
+                    if(ypos == 25){
+                        x1 = 0; x2 = 0; x3 = 0; x4= 0;
+                        y1 = 0; y2 = 0; y3 = 0; y4= 0;
+                        checkblock2 = [];
+
+                        clearInterval(down);
+                        keepstart();
+
+                    }else if(block_box_Color[checkblock2[i]][checkblock2[i+1]+1] != 'white'){                        
+                    
+                        x1 = 0; x2 = 0; x3 = 0; x4= 0;
+                        y1 = 0; y2 = 0; y3 = 0; y4= 0;
+                        checkblock2 = [];
+                        
+                        clearInterval(down);
+                        keepstart();
+                    }
+                }
+            }  
+
+
+             //기존 위치에 블럭 없애고
+             for(var i = 0; i < 8; i++){
+                if( i%2 == 0){
+                    xpos = usingblock[i];
+                    ypos = usingblock[i+1];
+
+                        block_box_Color[xpos][ypos] = 'white';
+                }
+            }
+
+           for(var i = 0; i < 8; i++){
+                if( i%2 == 0){
+                    xpos = usingblock[i];
+                    ypos = usingblock[i+1];
+
+                    //이동 위치 블럭 생성
+                    block_box_Color[xpos][ypos+1] = usingcolor;
+                    
+                    // 블럭 값 바뀐값으로 바꾸기
+                    usingblock[i] = xpos;
+                    usingblock[i+1] = ypos+1;
+            }
+        }
+            stage_fill();
+        }
+
+        function moveLeft(){
+            var xpos;
+            var ypos;
+
+            // 왼쪽 체크하기위해 만든 배열.
+              var lx1 = 0; var lx2 = 0; var lx3 = 0; var lx4= 0;
+            var ly1 = 0; var ly2 = 0; var ly3 = 0; var ly4= 0;
+
+            for(var i = 8; i > 0; --i){
+            if( i%2 == 1){
+
+            // 동일한 y값이 가진 x값중 가장 작은것 저장
+            if( usingblock[1] == usingblock[i]){
+                lx1 = usingblock[i-1];
+                ly1 = usingblock[i]; 
+            }else if( usingblock[3] == usingblock[i] ) {
+                lx2 = usingblock[i-1];
+                ly2 = usingblock[i];
+            }else if( usingblock[5] == usingblock[i]) {
+               lx3 = usingblock[i-1];
+                ly3 = usingblock[i];
+            }else if( usingblock[7] == usingblock[i]) {
+                lx4 = usingblock[i-1];
+                ly4 = usingblock[i];
+            }
+        }
+    }
+            var lcheckblock  = [lx1,ly1,lx2,ly2,lx3,ly3,lx4,ly4];
+            var lcheckblock2 = [];
+
+            for(var i = 0; i < 8; i++){
+                if(lcheckblock[i] != 0){
+                  lcheckblock2.push(lcheckblock[i]);
+             }
+            }
+
+
+             //왼줄 체크해서 함수 실행.
+          for(var i =0; i<lcheckblock2.length; ++i ){
+                if( i%2 == 0){
+
+                   if(block_box_Color[lcheckblock2[i]-1][lcheckblock2[i+1]] != 'white'){
+                                            
+                        lx1 = 0; lx2 = 0; lx3 = 0; lx4= 0;
+                        ly1 = 0; ly2 = 0; ly3 = 0; ly4= 0;
+                        lcheckblock2 = [];
+                        return;
+                    }
+                }
+            }
+
+
+             //기존 위치에 블럭 없애고
+             for(var i = 0; i < 8; i++){
+                if( i%2 == 0){
+                    xpos = usingblock[i];
+                    ypos = usingblock[i+1];
+
+                    if(xpos == 1){
+                       console.log("리턴 펄스!");
+                        return false;
+                    }
+                        block_box_Color[xpos][ypos] = 'white';
+                }
+            }
+
+            for(var i = 0; i < 8; i++){
+                if( i%2 == 0){
+                    xpos = usingblock[i];
+                    ypos = usingblock[i+1];
+                
+                    //이동 위치 블럭 생성
+                    block_box_Color[xpos-1][ypos] = usingcolor;
+                    
+                    // 블럭 값 바뀐값으로 바꾸기
+                    usingblock[i] = xpos-1;
+                    usingblock[i+1] = ypos;
+                    }
+
+            }
+            stage_fill();
+        }
+        
+        function moveRight(){
+            var xpos;
+            var ypos;
+
+              // 오른쪽 체크하기위해 만든 배열.
+            var lx1 = 0; var lx2 = 0; var lx3 = 0; var lx4= 0;
+            var ly1 = 0; var ly2 = 0; var ly3 = 0; var ly4= 0;
+
+            for(var i = 0; i < 8; ++i){
+            if( i%2 == 1){
+
+            // 동일한 y값이 가진 x값중 가장 큰것 저장
+            if( usingblock[1] == usingblock[i]){
+                lx1 = usingblock[i-1];
+                ly1 = usingblock[i]; 
+            }else if( usingblock[3] == usingblock[i] ) {
+                lx2 = usingblock[i-1];
+                ly2 = usingblock[i];
+            }else if( usingblock[5] == usingblock[i]) {
+               lx3 = usingblock[i-1];
+                ly3 = usingblock[i];
+            }else if( usingblock[7] == usingblock[i]) {
+                lx4 = usingblock[i-1];
+                ly4 = usingblock[i];
+            }
+        }
+    }
+            var lcheckblock  = [lx1,ly1,lx2,ly2,lx3,ly3,lx4,ly4];
+            var lcheckblock2 = [];
+
+            for(var i = 0; i < 8; i++){
+                if(lcheckblock[i] != 0){
+                  lcheckblock2.push(lcheckblock[i]);
+                }
+            }
+
+             //왼줄 체크해서 함수 실행.
+          for(var i =0; i<lcheckblock2.length; ++i ){
+                if( i%2 == 0){
+
+                   if(block_box_Color[lcheckblock2[i]+1][lcheckblock2[i+1]] != 'white'){
+                                            
+                        lx1 = 0; lx2 = 0; lx3 = 0; lx4= 0;
+                        ly1 = 0; ly2 = 0; ly3 = 0; ly4= 0;
+                        lcheckblock2 = [];
+                        return;
+                    }
+                }
+            }
+
+             //기존 위치에 블럭 없애고
+             for(var i = 0; i < 8; i++){
+                if( i%2 == 0){
+                    xpos = usingblock[i];
+                    ypos = usingblock[i+1];
+
+                    if(xpos == 18){
+                       
+                        return false;
+                    }
+
+                        block_box_Color[xpos][ypos] = 'white';
+                }
+            }
+
+            for(var i = 0; i < 8; i++){
+                if( i%2 == 0){
+                    xpos = usingblock[i];
+                    ypos = usingblock[i+1];
+                
+                    //이동 위치 블럭 생성
+                    block_box_Color[xpos+1][ypos] = usingcolor;
+                    
+                    // 블럭 값 바뀐값으로 바꾸기
+                    usingblock[i] = xpos+1;
+                    usingblock[i+1] = ypos;
+                    }
+            }
+            stage_fill();
+        }
+
+        // 다음 블럭
+        function next(){
+            usingblock = [];
+            spinvalue =0;
+
+            for(var i = 0; i < 8; i++){
+
+                if( i%2 == 0){
+    
+                if(random ==1){
+                  block_box_Color[blockbox[random][0][i]+x][blockbox[random][0][i+1]+y] = 'red';
+                    usingcolor = 'red';
+                }else if(random ==2){
+                    block_box_Color[blockbox[random][0][i]+x][blockbox[random][0][i+1]+y] = 'green';
+                    usingcolor = 'green';
+                }else if(random ==3){
+                    block_box_Color[blockbox[random][0][i]+x][blockbox[random][0][i+1]+y] = 'blue';
+                    usingcolor= 'blue';
+                }else if(random==4){
+                    block_box_Color[blockbox[random][0][i]+x][blockbox[random][0][i+1]+y] = 'orange';
+                    usingcolor = 'orange';
+                }else if(random == 5){
+                    block_box_Color[blockbox[random][0][i]+x][blockbox[random][0][i+1]+y] = 'purple';
+                    usingcolor = 'purple';
+                }else if(random ==6){
+                    block_box_Color[blockbox[random][0][i]+x][blockbox[random][0][i+1]+y] = 'yellow';
+                    usingcolor = 'yellow';
+                }else{
+                    block_box_Color[blockbox[random][0][i]+x][blockbox[random][0][i+1]+y] = 'SpringGreen';
+                    usingcolor = 'SpringGreen';
+                }
+                usingblock.push((blockbox[random][0][i]+x),(blockbox[random][0][i+1]+y));
+            }
+        }
+           
+            spinrandom = random;
+            createblock();
+            
+            stage_fill();  
+            
+            if(finishvalue == 1){
+                finish();
+            }            
+            finishvalue =0;
+            
+        }
+
+        function createblock() {
+
+            frandom = Math.random();
+            random = Math.floor(frandom*7);           
+
+            for(var i = 0; i<4;i++){
+                for(var j = 0; j<4; j++){
+                     //미리보기 하는곳 다시 배경색으로 바꾸고 
+                block_box_Color[i][j] = 'white';
+            
+                }
+            }
+
+            for(var i = 0; i < 8; i++){
+                
+            if( i%2 == 0){
+
+                // 다음 블록 넣기.
+            if(random ==1){
+              block_box_Color[blockbox[random][0][i]][blockbox[random][0][i+1]] = 'red';
+            }else if(random ==2){
+                block_box_Color[blockbox[random][0][i]][blockbox[random][0][i+1]] = 'green';
+            }else if(random ==3){
+                block_box_Color[blockbox[random][0][i]][blockbox[random][0][i+1]] = 'blue';
+            }else if(random==4){
+                block_box_Color[blockbox[random][0][i]][blockbox[random][0][i+1]] = 'orange';
+            }else if(random == 5){
+                block_box_Color[blockbox[random][0][i]][blockbox[random][0][i+1]] = 'purple';
+            }else if(random ==6){
+                block_box_Color[blockbox[random][0][i]][blockbox[random][0][i+1]] = 'yellow';
+            }else{
+                block_box_Color[blockbox[random][0][i]][blockbox[random][0][i+1]] = 'SpringGreen';
+            }
+
+            }
+                
+            }
+            stage_fill();
+
+            return;
+            }
+
+
+            var spinvalue =0;
+
+    function spin(){
+        var xpos;
+        var ypos;
+
+         //기존 위치에 블럭 없애고
+         for(var i = 0; i < 8; i++){
+                if( i%2 == 0){
+                    xpos = usingblock[i];
+                    ypos = usingblock[i+1];
+
+                    if(xpos == 1){
+                        return false;
+                    }
+                        block_box_Color[xpos][ypos] = 'white';
+                }
+            }
+
+
+                if(spinrandom ==0 || spinrandom== 3 || spinrandom==4){ //2개
+                    // usingblock (현재위치 + 블럭 모양 좌표) 에서 블럭모양좌표를 빼줌.
+                    // 그럼 위치정보만 남음.
+                    for(var i =0; i < 8; ++i){
+                        if( i%2 ==0){
+                        usingblock[i] = (usingblock[i]+1 - blockbox[spinrandom][spinvalue][i]);
+                        }else{
+                        usingblock[i] = (usingblock[i] - blockbox[spinrandom][spinvalue][i]);
+                        }
+                    }
+
+                    //블럭모양을 바꿔주고.
+                        spinvalue++;
+                    if(spinvalue == 2){
+                        spinvalue =0;
+                    }
+
+                    // 새로운 블럭 정보에 위치정보를 더해줌.
+                    for(var i =0; i < 8; ++i){
+                        usingblock[i]= (usingblock[i] + blockbox[spinrandom][spinvalue][i]);
+                    }
+
+                   
+                   
+                }else if(spinrandom ==1 || spinrandom ==5 || spinrandom==6){ // 4개
+                     // usingblock (현재위치 + 블럭 모양 좌표) 에서 블럭모양좌표를 빼줌.
+                    // 그럼 위치정보만 남음.
+                    for(var i =0; i < 8; ++i){
+                        if( i%2 ==0){
+                        usingblock[i] = (usingblock[i]+1 - blockbox[spinrandom][spinvalue][i]);
+                        }else{
+                        usingblock[i] = (usingblock[i] - blockbox[spinrandom][spinvalue][i]);
+                        }
+                    }
+
+                    //블럭모양을 바꿔주고.
+                    spinvalue++;
+                    if(spinvalue == 4){
+                        spinvalue =0;
+                    }
+
+                    // 새로운 블럭 정보에 위치정보를 더해줌.
+                    for(var i =0; i < 8; ++i){
+                        usingblock[i]= (usingblock[i] + blockbox[spinrandom][spinvalue][i]);
+                    }
+
+                    }else if(spinrandom ==2){ // 1개
+                        return;
+                    }
+            
+            for(var i = 0; i < 8; i++){
+                if( i%2 == 0){
+                    xpos = usingblock[i];
+                    ypos = usingblock[i+1];
+                
+                    //이동 위치 블럭 생성
+                    block_box_Color[xpos-1][ypos] = usingcolor;
+                    
+                    // 블럭 값 바뀐값으로 바꾸기
+                    usingblock[i] = xpos-1;
+                    usingblock[i+1] = ypos;
+                    }
+            }
+                stage_fill();
+        }
+    </script>
+
+
+</body>
+
+</html>
